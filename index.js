@@ -95,7 +95,7 @@ client.on(Events.MessageCreate, async message => {
 
     const infectedCount = virusRole.members.size;
 
-    console.log(`${replyingMember.user.tag} got Virus from ${originalMember.user.tag} (${infectedCount}`);
+    console.log(`${replyingMember.user.tag} got Virus from ${originalMember.user.tag} (${infectedCount})`);
   } catch (err) {
     console.error('Virus spread failed:', err);
   }
