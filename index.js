@@ -91,8 +91,8 @@ client.on(Events.MessageCreate, async message => {
     // Give the Virus role to the replying user
     await replyingMember.roles.add(VIRUS_ROLE_ID);
 
-    await message.guild.members.fetch();
-
+    virusRole.members.set(replyingMember.id, replyingMember);
+    
     const infectedCount = virusRole.members.size;
 
     console.log(`${replyingMember.user.tag} got Virus from ${originalMember.user.tag} (${infectedCount})`);
