@@ -99,7 +99,15 @@ client.on(Events.MessageCreate, async message => {
 
     const infectedCount = virusRole.members.size;
 
-    console.log(`${replyingMember.user.tag} got Virus from ${originalMember.user.tag} (${infectedCount})`);
+    const time = new Date().toLocaleTimeString('en-GB', {
+      timeZone: 'Europe/Berlin',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const channelName = message.channel.name || 'unknown';
+
+    console.log(`[${time}] #${channelName} ${originalMember.user.tag} infected ${replyingMember.user.tag} (${infectedCount})`);
   } catch (err) {
     console.error('Virus spread failed:', err);
   }
