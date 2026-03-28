@@ -21,8 +21,12 @@ const client = new Client({
 });
 
 // Confirm the bot connected successfully
-client.once(Events.ClientReady, c => {
+client.once(Events.ClientReady, async c => {
   console.log(`Logged in as ${c.user.tag}`);
+
+  for (const guild of c.guilds.cache.values()) {
+    await guild.members.fetch().catch(() => null);
+  }
 });
 
 // Spread the Virus role when someone replies to an infected user
@@ -68,15 +72,15 @@ client.on(Events.MessageCreate, async message => {
       .fetchMe()
       .catch(() => null);
 
-    // Permission Check
-    if (!botMember.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-      console.error('Bot lacks ManageRoles permission.');
-      return;
-    }
-
     // Hierarchy Check
     if (!botMember) {
       console.error('Could not fetch bot member.');
+      return;
+    }
+
+    // Permission Check
+    if (!botMember.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+      console.error('Bot lacks ManageRoles permission.');
       return;
     }
 
@@ -92,7 +96,7 @@ client.on(Events.MessageCreate, async message => {
     await replyingMember.roles.add(VIRUS_ROLE_ID);
 
     virusRole.members.set(replyingMember.id, replyingMember);
-    
+
     const infectedCount = virusRole.members.size;
 
     console.log(`${replyingMember.user.tag} got Virus from ${originalMember.user.tag} (${infectedCount})`);
