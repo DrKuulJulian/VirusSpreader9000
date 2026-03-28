@@ -93,7 +93,6 @@ client.on(Events.MessageCreate, async message => {
 
     await message.guild.members.fetch();
 
-    const virusRole = await message.guild.roles.fetch(VIRUS_ROLE_ID);
     const infectedCount = virusRole.members.size;
 
     console.log(`${replyingMember.user.tag} got Virus from ${originalMember.user.tag} (${infectedCount}`);
