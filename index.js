@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, Partials, Events } = require('discord.js');
 
 const TOKEN = process.env.TOKEN;
-const VIRUS_ROLE_ID = '1010680490807804005';
+const VIRUS_ROLE_ID = '1487316209044164629';
 
 const client = new Client({
   intents: [
