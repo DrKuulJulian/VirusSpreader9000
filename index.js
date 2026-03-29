@@ -157,6 +157,25 @@ client.on(Events.InteractionCreate, async interaction => {
       }).catch(() => null);
     }
   }
+
+  //help command
+  if (interaction.commandName === 'virushelp') {
+    try {
+      const helpMessage = `**Endgame Shenanigans**\n\n` +
+                          `**How it spreads:** If you reply to a message from someone who is infected, you will catch the virus too\n` +
+                          `**How to stay safe:** If you must reply to an infected person, include the 😷 or \`:mask:\` emoji in your message to protect yourself.\n\n` +
+                          `**Commands:**\n` +
+                          `\`/infected\` - See the total number of infected members.\n` +
+                          `\`/virushelp\` - Show this guide.`;
+
+      await interaction.reply({ 
+        content: helpMessage, 
+        ephemeral: true 
+      });
+    } catch (error) {
+      console.error('Error handling /virushelp command:', error);
+    }
+  }
 });
 
 client.login(TOKEN);
