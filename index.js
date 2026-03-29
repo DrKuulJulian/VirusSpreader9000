@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Partials, Events, PermissionsBitField } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Events, PermissionsBitField, MessageFlags } = require('discord.js');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const VIRUS_ROLE_ID = process.env.VIRUS_ROLE_ID;
@@ -145,22 +145,26 @@ client.on(Events.InteractionCreate, async interaction => {
       if (!virusRole) {
         await interaction.reply({ 
           content: 'Error: Could not find the Virus role on this server.', 
-          ephemeral: true //private
+          flags: MessageFlags.Ephemeral //private
         });
         return;
       }
+
       const count = virusRole.members.size;
       await interaction.reply({ 
         content: `There are currently **${count}** infected people in the server. 🦠`, 
-        ephemeral: true 
+        flags: MessageFlags.Ephemeral 
       });
 
     } catch (error) {//fallback error handling
       console.error('Error handling /infected command:', error);
-      await interaction.reply({ 
-        content: 'Something went wrong while counting the infected.', 
-        ephemeral: true 
-      }).catch(() => null);
+
+      if (!interaction.replied) {
+        await interaction.reply({ 
+          content: 'Something went wrong while counting the infected.', 
+          flags: MessageFlags.Ephemeral 
+        }).catch(() => null);
+      }
     }
   }
 
@@ -176,7 +180,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await interaction.reply({ 
         content: helpMessage, 
-        ephemeral: true 
+        flags: MessageFlags.Ephemeral  
       });
     } catch (error) {
       console.error('Error handling /virushelp command:', error);
