@@ -94,7 +94,7 @@ client.on(Events.MessageCreate, async message => {
 
     // Give the Virus role to the replying user
     await replyingMember.roles.add(VIRUS_ROLE_ID);
-    await message.react(':syringe:').catch(() => null);
+    await message.react('💉').catch(() => null);
 
     virusRole.members.set(replyingMember.id, replyingMember);
 
@@ -114,20 +114,26 @@ client.on(Events.MessageCreate, async message => {
   }
 });
 
-//infected command
+//commands
 client.once(Events.ClientReady, async c => {
   try {
-    await c.application.commands.create({
-      name: 'infected',
-      description: 'Check how many people currently have the virus.'
-    });
-    console.log('Slash command /infected registered!');
+    await c.application.commands.set([
+      {
+        name: 'infected',
+        description: 'Check how many people currently have the virus.'
+      },
+      {
+        name: 'virushelp',
+        description: 'Learn how the virus spreads and how to stay safe.'
+      }
+    ]);
+    console.log('Slash commands /infected and /virushelp registered!');
   } catch (error) {
-    console.error('Failed to register slash command:', error);
+    console.error('Failed to register slash commands:', error);
   }
 });
 
-//Listen for someone typing the /infected command
+//infected command
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
