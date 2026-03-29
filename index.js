@@ -114,4 +114,68 @@ client.on(Events.MessageCreate, async message => {
   }
 });
 
+//infected command
+client.once(Events.ClientReady, async c => {
+  try {
+    await c.application.commands.create({
+      name: 'infected',
+      description: 'Check how many people currently have the virus.'
+    });
+    console.log('Slash command /infected registered!');
+  } catch (error) {
+    console.error('Failed to register slash command:', error);
+  }
+});
+
+//Listen for someone typing the /infected command
+client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'infected') {
+    try {
+      // Fetch the role from the server
+      const virusRole = await interaction.guild.roles.fetch(VIRUS_ROLE_ID).catch(() => null);
+
+      if (!virusRole) {
+        await interaction.reply({ 
+          content: 'Error: Could not find the Virus role on this server.', 
+          ephemeral: true //private
+        });
+        return;
+      }
+      const count = virusRole.members.size;
+      await interaction.reply({ 
+        content: `There are currently **${count}** infected people in the server. 🦠`, 
+        ephemeral: true 
+      });
+
+    } catch (error) {//fallback error handling
+      console.error('Error handling /infected command:', error);
+      await interaction.reply({ 
+        content: 'Something went wrong while counting the infected.', 
+        ephemeral: true 
+      }).catch(() => null);
+    }
+  }
+
+  //help command
+  if (interaction.commandName === 'virushelp') {
+    try {
+      const helpMessage = `**Endgame Shenanigans**\n\n` +
+                          `**How it spreads:** If you reply to a message from someone who is infected, you will catch the virus too\n` +
+                          `**How to stay safe:** If you must reply to an infected person, include the 😷 or \`:mask:\` emoji in your message to protect yourself.\n\n` +
+                          `**Commands:**\n` +
+                          `\`/infected\` - See the total number of infected members.\n` +
+                          `\`/virushelp\` - Show this guide.`;
+
+      await interaction.reply({ 
+        content: helpMessage, 
+        ephemeral: true 
+      });
+    } catch (error) {
+      console.error('Error handling /virushelp command:', error);
+    }
+  }
+});
+
 client.login(TOKEN);
