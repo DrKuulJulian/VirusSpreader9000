@@ -94,7 +94,6 @@ client.on(Events.MessageCreate, async message => {
 
     // Give the Virus role to the replying user
     await replyingMember.roles.add(VIRUS_ROLE_ID);
-    await message.react('💉').catch(() => null);
 
     virusRole.members.set(replyingMember.id, replyingMember);
 
