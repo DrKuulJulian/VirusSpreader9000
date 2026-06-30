@@ -122,11 +122,15 @@ client.once(Events.ClientReady, async c => {
         description: 'Check how many people currently have the virus.'
       },
       {
+  name: 'privacypolicy',
+  description: 'View the privacy policy for VirusSpreader9000.'
+      },
+      {
         name: 'virushelp',
         description: 'Learn how the virus spreads and how to stay safe.'
       }
     ]);
-    console.log('Slash commands /infected and /virushelp registered!');
+    console.log('Slash commands registered!');
   } catch (error) {
     console.error('Failed to register slash commands:', error);
   }
@@ -167,10 +171,30 @@ client.on(Events.InteractionCreate, async interaction => {
     }
   }
 
+  if (interaction.commandName === 'privacypolicy') {
+    try {
+      const ppMessage =
+        `**VirusSpreader9000 — Privacy Policy**\n\n` +
+        `This bot does **not** collect, store, or share any personal data.\n\n` +
+        `**What it accesses:**\n` +
+        `• Message content — only to detect the 😷 emoji. Not stored.\n` +
+        `• Server member list — only to check and assign the Virus role. Not stored.\n` +
+        `• User IDs — used temporarily during role assignment. Not stored.\n\n` +
+        `**Full policy:** [github.com](https://github.com/DrKuulJulian/VirusSpreader9000/blob/main/PRIVACY_POLICY.md)`;
+
+      await interaction.reply({
+        content: ppMessage,
+        flags: MessageFlags.Ephemeral
+      });
+    } catch (error) {
+      console.error('Error handling /privacypolicy command:', error);
+    }
+  }
+
   //help command
   if (interaction.commandName === 'virushelp') {
     try {
-      const helpMessage = `**Endgame Shenanigans**\n\n` +
+      const helpMessage = `**Endgame**\n\n` +
                           `**How it spreads:** If you reply to a message from someone who is infected, you will catch the virus too\n` +
                           `**How to stay safe:** If you must reply to an infected person, include the 😷 or \`:mask:\` emoji in your message to protect yourself.\n\n` +
                           `**Commands:**\n` +
