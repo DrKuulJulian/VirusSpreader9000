@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, Partials, Events, PermissionsBitField, Messag
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const VIRUS_ROLE_ID = process.env.VIRUS_ROLE_ID;
+const BAN_ROLE_ID = '1522207873772421220'
 
 if (!TOKEN || !VIRUS_ROLE_ID) {
   console.error('Missing DISCORD_TOKEN or VIRUS_ROLE_ID in .env');
@@ -122,8 +123,20 @@ client.once(Events.ClientReady, async c => {
         description: 'Check how many people currently have the virus.'
       },
       {
-  name: 'privacypolicy',
-  description: 'View the privacy policy for VirusSpreader9000.'
+        name: 'privacypolicy',
+        description: 'View the privacy policy for VirusSpreader9000.'
+      },
+      {
+        name: 'endgameban',
+        description: 'Assign the Endgame ban role to a user.',
+        options: [
+          {
+            name: 'userid',
+            description: 'The ID of the user to ban.',
+            type: 3, // STRING
+            required: true
+          }
+        ]
       },
       {
         name: 'virushelp',
@@ -155,7 +168,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       const count = virusRole.members.size;
       await interaction.reply({ 
-        content: `There are currently **${count}** infected people in the server. 🦠`, 
+        content: `There are currently **${count}** infected people in the server.`, 
         flags: MessageFlags.Ephemeral 
       });
 
@@ -190,6 +203,48 @@ client.on(Events.InteractionCreate, async interaction => {
       console.error('Error handling /privacypolicy command:', error);
     }
   }
+
+  if (interaction.commandName === 'endgameban') {
+    try {
+      const BAN_ROLE_ID = process.env.BAN_ROLE_ID;
+      const userId = interaction.options.getString('userid');
+
+      const member = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (!member) {
+        await interaction.reply({
+          content: `Could not find a member with ID \`${userId}\`.`,
+          flags: MessageFlags.Ephemeral
+        });
+        return;
+      }
+
+      if (member.roles.cache.has(BAN_ROLE_ID)) {
+        await interaction.reply({
+          content: `${member.user.tag} already has the ban role.`,
+          flags: MessageFlags.Ephemeral
+        });
+        return;
+      }
+
+      await member.roles.add(BAN_ROLE_ID);
+
+      await interaction.reply({
+        content: `Applied ban role to **${member.user.tag}**.`,
+        flags: MessageFlags.Ephemeral
+      });
+
+    } catch (error) {
+      console.error('Error handling /endgameban command:', error);
+      if (!interaction.replied) {
+        await interaction.reply({
+          content: 'Something went wrong.',
+          flags: MessageFlags.Ephemeral
+        }).catch(() => null);
+      }
+    }
+  }
+
 
   //help command
   if (interaction.commandName === 'virushelp') {
