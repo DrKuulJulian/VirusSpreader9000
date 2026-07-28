@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Events, PermissionsBitField, MessageFlags } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Events, PermissionsBitField, MessageFlags } = require('discord.js');
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const VIRUS_ROLE_ID = process.env.VIRUS_ROLE_ID;
@@ -9,17 +9,6 @@ if (!TOKEN || !VIRUS_ROLE_ID) {
   process.exit(1);
 }
 
-const countCache = new Map(); // guildId -> { count, at }
-const COUNT_TTL = 30_000;
-async function countInfected(guild) {
-  const hit = countCache.get(guild.id);
-  if (hit && Date.now() - hit.at < COUNT_TTL) return hit.count;
-  const members = await guild.members.fetch();
-  const count = members.filter(m => m.roles.cache.has(VIRUS_ROLE_ID)).size;
-  countCache.set(guild.id, { count, at: Date.now() });
-  return count;
-}
-
 // Create Discord client with the intents needed for replies, member lookups, and role assignment
 const client = new Client({
   intents: [
@@ -27,7 +16,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers
-  ]
+  ],
+  partials: [Partials.Channel, Partials.Message]
 });
 
 // Confirm the bot connected successfully
@@ -35,10 +25,8 @@ client.once(Events.ClientReady, async c => {
   console.log(`Logged in as ${c.user.tag}`);
 
   for (const guild of c.guilds.cache.values()) {
-    await guild.members.fetch().catch(err =>
-      console.error(`Member fetch failed for ${guild.name}:`, err)
-    );
-  };
+    await guild.members.fetch().catch(() => null);
+  }
 });
 
 // Spread the Virus role when someone replies to an infected user
@@ -107,9 +95,9 @@ client.on(Events.MessageCreate, async message => {
     // Give the Virus role to the replying user
     await replyingMember.roles.add(VIRUS_ROLE_ID);
 
-    const infectedCount = message.guild.members.cache.filter(
-      m => m.roles.cache.has(VIRUS_ROLE_ID)
-    ).size;
+    virusRole.members.set(replyingMember.id, replyingMember);
+
+    const infectedCount = virusRole.members.size;
 
     const time = new Date().toLocaleTimeString('en-GB', {
       timeZone: 'Europe/Berlin',
@@ -131,18 +119,15 @@ client.once(Events.ClientReady, async c => {
     await c.application.commands.set([
       {
         name: 'infected',
-        description: 'Check how many people currently have the virus.',
-        contexts: [0]
+        description: 'Check how many people currently have the virus.'
       },
       {
         name: 'privacypolicy',
-        description: 'View the privacy policy for VirusSpreader9000.',
-        contexts: [0]
+        description: 'View the privacy policy for VirusSpreader9000.'
       },
       {
         name: 'virushelp',
-        description: 'Learn how the virus spreads and how to stay safe.',
-        contexts: [0]
+        description: 'Learn how the virus spreads and how to stay safe.'
       }
     ]);
     console.log('Slash commands registered!');
@@ -157,25 +142,34 @@ client.on(Events.InteractionCreate, async interaction => {
 
   if (interaction.commandName === 'infected') {
     try {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      // Fetch the role from the server
+      const virusRole = await interaction.guild.roles.fetch(VIRUS_ROLE_ID).catch(() => null);
 
-      const count = await countInfected(interaction.guild);
+      if (!virusRole) {
+        await interaction.reply({ 
+          content: 'Error: Could not find the Virus role on this server.', 
+          flags: MessageFlags.Ephemeral //private
+        });
+        return;
+      }
 
-      await interaction.editReply(
-        `There are currently **${count}** infected people in the server.`
-      );
-    } catch (error) {
+      const count = virusRole.members.size;
+      await interaction.reply({ 
+        content: `There are currently **${count}** infected people in the server.`, 
+        flags: MessageFlags.Ephemeral 
+      });
+
+    } catch (error) {//fallback error handling
       console.error('Error handling /infected command:', error);
 
-      const msg = 'Something went wrong while counting the infected.';
-      if (interaction.deferred || interaction.replied) {
-        await interaction.editReply(msg).catch(() => null);
-      } else {
-        await interaction.reply({ content: msg, flags: MessageFlags.Ephemeral }).catch(() => null);
+      if (!interaction.replied) {
+        await interaction.reply({ 
+          content: 'Something went wrong while counting the infected.', 
+          flags: MessageFlags.Ephemeral 
+        }).catch(() => null);
       }
     }
   }
-
 
   if (interaction.commandName === 'privacypolicy') {
     try {
@@ -216,8 +210,5 @@ client.on(Events.InteractionCreate, async interaction => {
     }
   }
 });
-
-process.on('unhandledRejection', err => console.error('Unhandled rejection:', err));
-client.on(Events.Error, err => console.error('Client error:', err));
 
 client.login(TOKEN);
